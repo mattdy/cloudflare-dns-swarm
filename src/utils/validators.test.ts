@@ -307,6 +307,70 @@ describe("LabelValidator", () => {
     });
   });
 
+  describe("Environment defaults", () => {
+    beforeEach(() => {
+      config.app.defaults = {
+        recordType: "CNAME",
+        content: "tunnel.cfargotunnel.com",
+        proxied: true,
+        ttl: 1,
+      };
+    });
+
+    it("should use DNS_DEFAULT_RECORD_TYPE and DNS_DEFAULT_CONTENT when no type is set", () => {
+      const labels = {
+        "dns.cloudflare.hostname": "app.domain.com",
+      };
+
+      const result = validator.validateServiceLabels("test-service", labels);
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual({
+        hostname: "app.domain.com",
+        type: "CNAME",
+        content: "tunnel.cfargotunnel.com",
+        proxied: true,
+        ttl: 1,
+      });
+    });
+
+    it("should not apply default content to a different record type", () => {
+      const labels = {
+        "dns.cloudflare.hostname": "app.domain.com",
+        "dns.cloudflare.type": "A",
+      };
+
+      const result = validator.validateServiceLabels("test-service", labels);
+      expect(result).toHaveLength(1);
+      expect(result[0].type).toBe("A");
+      expect(result[0].content).toBeUndefined();
+    });
+
+    it("should prefer explicit content over the default", () => {
+      const labels = {
+        "dns.cloudflare.hostname": "app.domain.com",
+        "dns.cloudflare.content": "other.domain.com",
+      };
+
+      const result = validator.validateServiceLabels("test-service", labels);
+      expect(result[0].content).toBe("other.domain.com");
+    });
+
+    it("should apply default content to Traefik hosts", () => {
+      config.app.useTraefikLabels = true;
+      const labels = {
+        "traefik.enable": "true",
+        "traefik.http.routers.app.rule": "Host(`app.domain.com`)",
+      };
+
+      const result = validator.validateServiceLabels("test-service", labels);
+      expect(result).toHaveLength(1);
+      expect(result[0]).toMatchObject({
+        type: "CNAME",
+        content: "tunnel.cfargotunnel.com",
+      });
+    });
+  });
+
   describe("Label Groups", () => {
     it("should handle alternative group notation", () => {
       const labels = {

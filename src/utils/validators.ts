@@ -83,9 +83,18 @@ export class LabelValidator {
     }
 
     // Gérer le contenu
+    // Le contenu par défaut n'est valable que pour le type par défaut
+    // (ex: une cible CNAME ne doit pas être utilisée pour un enregistrement A)
     if (label.content !== undefined) {
       finalLabel.content = label.content;
-    } else if (finalLabel.type === "CNAME") {
+    } else if (
+      config.app.defaults.content &&
+      finalLabel.type === config.app.defaults.recordType
+    ) {
+      finalLabel.content = config.app.defaults.content;
+    }
+
+    if (finalLabel.content === undefined && finalLabel.type === "CNAME") {
       this.logger.error(
         `Missing required content for CNAME record in service ${serviceName}`
       );
@@ -214,7 +223,7 @@ export class LabelValidator {
   }
 
   private validateRecordType(serviceName: string, type?: string): string {
-    if (!type) return "A";
+    if (!type) type = config.app.defaults.recordType;
     const upperType = type.toUpperCase();
     if (!LabelValidator.VALID_RECORD_TYPES.includes(upperType)) {
       this.logger.warn(
