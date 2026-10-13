@@ -1,7 +1,11 @@
 import { config } from "./config";
+import { mkdtempSync, rmSync, writeFileSync } from "fs";
+import { tmpdir } from "os";
+import { join } from "path";
 
 describe("Config", () => {
   const originalEnv = process.env;
+  let tempDirectory: string;
 
   beforeEach(() => {
     jest.resetModules();
@@ -14,6 +18,10 @@ describe("Config", () => {
 
   afterEach(() => {
     process.env = originalEnv;
+    if (tempDirectory) {
+      rmSync(tempDirectory, { recursive: true, force: true });
+      tempDirectory = "";
+    }
     jest.clearAllMocks();
   });
 
@@ -44,5 +52,18 @@ describe("Config", () => {
 
     expect(config.app.retryAttempts).toBe(5);
     expect(config.app.retryDelay).toBe(60000);
+  });
+
+  it("should read the Cloudflare token from the configured file", () => {
+    tempDirectory = mkdtempSync(join(tmpdir(), "cloudflare-config-"));
+    const tokenFile = join(tempDirectory, "cloudflare-token");
+    writeFileSync(tokenFile, "file-token\n");
+    process.env.CLOUDFLARE_TOKEN_FILE = tokenFile;
+    delete process.env.CLOUDFLARE_TOKEN;
+    delete require.cache[require.resolve("./config")];
+
+    const { config } = require("./config");
+
+    expect(config.cloudflare.token).toBe("file-token");
   });
 });
