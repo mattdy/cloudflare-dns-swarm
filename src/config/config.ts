@@ -1,4 +1,5 @@
 import dotenv from "dotenv";
+import { readFileSync } from "fs";
 import { Logger } from "../utils/logger";
 import { z } from "zod";
 
@@ -51,7 +52,14 @@ const envSchema = z.object({
   IP_CHECK_INTERVAL: z.string().optional(),
 });
 
-const env = envSchema.safeParse(process.env);
+const tokenFromFile = process.env.CLOUDFLARE_TOKEN_FILE
+  ? readFileSync(process.env.CLOUDFLARE_TOKEN_FILE, "utf8").trim()
+  : undefined;
+
+const env = envSchema.safeParse({
+  ...process.env,
+  CLOUDFLARE_TOKEN: tokenFromFile ?? process.env.CLOUDFLARE_TOKEN,
+});
 
 if (!env.success) {
   const error = new Error(env.error.errors[0].message);

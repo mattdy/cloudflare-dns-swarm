@@ -36,7 +36,9 @@ export class Application {
       ["Cloudflare Zone", process.env.CLOUDFLARE_ZONE_ID || "not set"],
       [
         "Cloudflare Token",
-        process.env.CLOUDFLARE_TOKEN ? "********" : "not set",
+        process.env.CLOUDFLARE_TOKEN || process.env.CLOUDFLARE_TOKEN_FILE
+          ? "********"
+          : "not set",
       ],
       ["Docker Socket", process.env.DOCKER_SOCKET || "/var/run/docker.sock"],
       ["DNS Label Prefix", "dns.cloudflare."],

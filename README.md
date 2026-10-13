@@ -215,12 +215,15 @@ The following environment variables can be used to configure the application:
 
 | Variable            | Description                              | Default                | Required |
 | ------------------- | ---------------------------------------- | ---------------------- | -------- |
-| `CLOUDFLARE_TOKEN`  | Cloudflare API token                     | -                      | Yes      |
+| `CLOUDFLARE_TOKEN`  | Cloudflare API token                     | -                      | Yes*     |
+| `CLOUDFLARE_TOKEN_FILE` | Path to a file containing the Cloudflare API token (for example, a Docker Swarm secret) | - | Yes* |
 | `DOCKER_SOCKET`     | Docker socket path                       | `/var/run/docker.sock` | No       |
 | `LOG_LEVEL`         | Logging level (debug, info, warn, error) | `info`                 | No       |
 | `RETRY_ATTEMPTS`    | Number of retry attempts                 | `3`                    | No       |
 | `RETRY_DELAY`       | Delay between retries (ms)               | `300000`               | No       |
 | `IP_CHECK_INTERVAL` | IP check interval (ms)                   | `3600000`              | No       |
+
+* Set either `CLOUDFLARE_TOKEN` or `CLOUDFLARE_TOKEN_FILE`. When both are set, the file takes precedence.
 
 ### DNS Settings
 
